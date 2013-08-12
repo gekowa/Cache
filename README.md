@@ -1,7 +1,7 @@
 Attribute Based Cache
 =====================
 
-This project is based on https://cache.codeplex.com/, SVN revision 20740. The purpose of forking this project is to add and change some features to fit some of my projects' needs. The changes are includes:
+This project is based on https://cache.codeplex.com/, SVN revision 20740. The purpose of forking this project is to add and change some features to fit some of my projects' needs. The changes include:
 
 1. Removed OutputProcess and BTree implementations
 2. Added a raw version of disk cache
@@ -9,4 +9,4 @@ This project is based on https://cache.codeplex.com/, SVN revision 20740. The pu
 
 Requirements:
 
-1. PostSharp 2 Starter Edition or 3 Express.
+PostSharp 2 Starter Edition or 3 Express.
