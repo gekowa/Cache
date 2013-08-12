@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.ApplicationServer.Caching;
 using PostSharp.Aspects;
 using CacheAspect.Supporting;
 using System.Reflection;
@@ -21,12 +20,19 @@ namespace CacheAspect.Attributes
             }
 
             #region Constructors
-            
+
             public Cacheable(String groupName, CacheSettings settings, String parameterProperty)
             {
                 KeyBuilder.GroupName = groupName;
                 KeyBuilder.Settings = settings;
-                KeyBuilder.ParameterProperty = parameterProperty;
+                KeyBuilder.ParameterProperties = new string[] { parameterProperty };
+            }
+
+            public Cacheable(string groupName, CacheSettings settings, string[] parameterProperties)
+            {
+                KeyBuilder.GroupName = groupName;
+                KeyBuilder.Settings = settings;
+                KeyBuilder.ParameterProperties = parameterProperties;
             }
 
             public Cacheable(String groupName, CacheSettings settings)
@@ -59,12 +65,44 @@ namespace CacheAspect.Attributes
 
                 // Fetch the value from the cache.
                 ICache cache = CacheService.Cache;
-                DateWrapper<object> value = (DateWrapper<object>)(cache.Contains(cacheKey) ? cache[cacheKey] : null);
+                MethodExecWrapper value = (MethodExecWrapper)(cache.Contains(cacheKey) ? cache[cacheKey] : null);
 
                 if (value != null && !IsTooOld(value.Timestamp))
                 {
                     // The value was found in cache. Don't execute the method. Return immediately.
-                    args.ReturnValue = value.Object;
+                    args.ReturnValue = value.ReturnValue;
+                    // args.Arguments = value.Arguments;
+                    for (int i = 0; i < value.Arguments.Length; i++)
+                    {
+                        // args.Arguments.SetArgument(i, value.Arguments[i]);
+                        object fromArgs = args.Arguments[i];
+                        object cached = value.Arguments[i];
+
+                        if (cached == null)
+                        {
+                            continue;
+                        }
+
+                        if (fromArgs != null && cached != null &&
+                            !object.ReferenceEquals(fromArgs.GetType(), cached.GetType()))
+                        {
+                            continue;
+                        }
+
+                        Type commonType = fromArgs.GetType();
+                        foreach (PropertyInfo pi in commonType.GetProperties())
+                        {
+                            if (pi.CanRead && pi.CanWrite)
+                            {
+                                object fromValue = pi.GetValue(fromArgs, null);
+                                object cachedValue = pi.GetValue(cached, null);
+                                if (fromValue != cachedValue)
+                                {
+                                    pi.SetValue(fromArgs, cachedValue, null);
+                                }
+                            }
+                        }
+                    }
                     args.FlowBehavior = FlowBehavior.Return;
                 }
                 else
@@ -79,10 +117,11 @@ namespace CacheAspect.Attributes
             public override void OnSuccess(MethodExecutionArgs args)
             {
                 string cacheKey = (string)args.MethodExecutionTag;
-                CacheService.Cache[cacheKey] = new DateWrapper<Object>()
+                CacheService.Cache[cacheKey] = new MethodExecWrapper
                 {
-                    Object = args.ReturnValue,
-                    Timestamp = DateTime.UtcNow
+                    ReturnValue = args.ReturnValue,
+                    Timestamp = DateTime.UtcNow,
+                    Arguments = args.Arguments.ToArray()
                 };
             }
 

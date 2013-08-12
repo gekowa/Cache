@@ -30,5 +30,17 @@ namespace CacheAspect
         {
             cache.Remove(key);
         }
+
+        public void DeleteSimilar(string key)
+        {
+            string[] keys = cache.Keys.ToArray();
+            for (int i = 0; i < keys.Length; i++)
+            {
+                if (keys[i].StartsWith(key))
+                {
+                    cache.Remove(keys[i]);
+                }
+            }
+        }
     }
 }

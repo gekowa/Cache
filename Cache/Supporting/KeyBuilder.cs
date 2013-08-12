@@ -12,16 +12,19 @@ namespace CacheAspect
     [Serializable]
     public class KeyBuilder
     {
+        public static readonly char SPLITTER = '%';
+
         public string MethodName { get; set; }
         public CacheSettings Settings { get; set; }
         public string GroupName { get; set; }
-        public string ParameterProperty { get; set; }
+        public string[] ParameterProperties { get; set; }
         private Dictionary<int, string> _parametersNameValueMapper;
         private ParameterInfo[] _methodParameters;
         public ParameterInfo[] MethodParameters
         {
             get { return _methodParameters; }
-            set { 
+            set
+            {
                 _methodParameters = value;
                 TransformParametersIntoNameValueMapper(_methodParameters);
             }
@@ -43,11 +46,11 @@ namespace CacheAspect
             // start building a key based on the method name if a group name not set
             if (string.IsNullOrWhiteSpace(GroupName))
             {
-                cacheKeyBuilder.Append(MethodName);
+                cacheKeyBuilder.Append(MethodName).Append(SPLITTER);
             }
             else
             {
-                cacheKeyBuilder.Append(GroupName);
+                cacheKeyBuilder.Append(GroupName).Append(SPLITTER);
             }
 
             if (instance != null)
@@ -56,20 +59,24 @@ namespace CacheAspect
                 cacheKeyBuilder.Append(";");
             }
 
-
             int argIndex;
             switch (Settings)
             {
                 case CacheSettings.IgnoreParameters:
                     return cacheKeyBuilder.ToString();
-                    
                 case CacheSettings.UseId:
                     argIndex = GetArgumentIndexByName("Id");
-                    cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null");
+                    cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null").Append(SPLITTER);
                     break;
                 case CacheSettings.UseProperty:
-                    argIndex = GetArgumentIndexByName(ParameterProperty);
-                    cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null");
+                    //argIndex = GetArgumentIndexByName(ParameterProperty);
+                    //cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null");
+                    for (var i = 0; i < ParameterProperties.Length; i++)
+                    {
+                        argIndex = GetArgumentIndexByName(ParameterProperties[i]);
+                        // cacheKeyBuilder.Append( ?? "Null");
+                        BuildDefaultKey(arguments.GetArgument(argIndex), cacheKeyBuilder);
+                    }
                     break;
                 case CacheSettings.Default:
                     for (var i = 0; i < arguments.Count; i++)
@@ -79,7 +86,7 @@ namespace CacheAspect
                     break;
             }
 
-            return cacheKeyBuilder.ToString();
+            return cacheKeyBuilder.ToString().TrimEnd(SPLITTER);
         }
 
         private static void BuildDefaultKey(object argument, StringBuilder cacheKeyBuilder)
@@ -89,26 +96,31 @@ namespace CacheAspect
                 cacheKeyBuilder.Append("{");
                 foreach (object o in (ICollection)argument)
                 {
-                    cacheKeyBuilder.Append(o ?? "Null");
+                    cacheKeyBuilder.Append(o ?? "Null").Append(SPLITTER);
                 }
                 cacheKeyBuilder.Append("}");
             }
             else
             {
-                cacheKeyBuilder.Append(argument ?? "Null");
+                cacheKeyBuilder.Append(argument ?? "Null").Append(SPLITTER);
             }
         }
 
         private int GetArgumentIndexByName(string paramName)
         {
-            var paramKeyValue = _parametersNameValueMapper.SingleOrDefault( arg => string.Compare(arg.Value, paramName, CultureInfo.InvariantCulture, 
+            var paramKeyValue = _parametersNameValueMapper.SingleOrDefault(arg => string.Compare(arg.Value, paramName, CultureInfo.InvariantCulture,
                 CompareOptions.IgnoreCase) == 0);
 
             return paramKeyValue.Key;
-
         }
-     
     }
 
-    public enum CacheSettings { Default, IgnoreParameters, UseId, UseProperty, IgnoreTTL };
+    public enum CacheSettings { 
+        Default, 
+        IgnoreParameters, 
+        UseId,
+        UseProperty, 
+        UseCustom, 
+        IgnoreTTL 
+    };
 }

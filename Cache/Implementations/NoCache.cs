@@ -29,5 +29,10 @@ namespace CacheAspect
         {
             ;
         }
+
+        public void DeleteSimilar(string key)
+        {
+            ;
+        }
     }
 }

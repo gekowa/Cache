@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using PostSharp.Aspects;
-using Microsoft.ApplicationServer.Caching;
 
 namespace CacheAspect.Attributes
 {
@@ -19,13 +18,23 @@ namespace CacheAspect.Attributes
                 get { return _keyBuilder ?? (_keyBuilder = new KeyBuilder()); }
             }
 
+            private bool bySimilar = false;
+
             #region Constructors
-            
+
             public TriggerInvalidation(String groupName, CacheSettings settings, String parameterProperty)
             {
                 KeyBuilder.GroupName = groupName;
                 KeyBuilder.Settings = settings;
-                KeyBuilder.ParameterProperty = parameterProperty;
+                KeyBuilder.ParameterProperties = new string[] { parameterProperty };
+            }
+
+            public TriggerInvalidation(String groupName, CacheSettings settings, String[] parameterProperties, bool bySimilar)
+            {
+                KeyBuilder.GroupName = groupName;
+                KeyBuilder.Settings = settings;
+                KeyBuilder.ParameterProperties = parameterProperties;
+                this.bySimilar = bySimilar;
             }
 
             public TriggerInvalidation(String groupName, CacheSettings settings)
@@ -49,22 +58,24 @@ namespace CacheAspect.Attributes
             public override void CompileTimeInitialize(MethodBase method, AspectInfo aspectInfo)
             {
                 KeyBuilder.MethodParameters = method.GetParameters();
-                KeyBuilder.MethodName =  string.Format("{0}.{1}", method.DeclaringType.FullName, method.Name);
+                KeyBuilder.MethodName = string.Format("{0}.{1}", method.DeclaringType.FullName, method.Name);
             }
 
             public override void OnExit(MethodExecutionArgs args)
             {
                 string key = KeyBuilder.BuildCacheKey(args.Instance, args.Arguments);
 
-                if (CacheService.Cache.Contains(key))
+                if (bySimilar)
+                {
+                    CacheService.Cache.DeleteSimilar(key);
+                }
+                else if (CacheService.Cache.Contains(key))
                 {
                     CacheService.Cache.Delete(key);
                 }
 
                 base.OnExit(args);
             }
-
-
         }
     }
 }

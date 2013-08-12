@@ -12,5 +12,7 @@ namespace CacheAspect
         bool Contains(string key);
 
         void Delete(string key);
+
+        void DeleteSimilar(string key);
     }
 }

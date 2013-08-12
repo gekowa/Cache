@@ -36,13 +36,10 @@ namespace TestCache
         //The user parameters Id property is used to build Key for "GetUserById"+ Id  Key
         //this is done using a bit reflection
         [Cache.TriggerInvalidation("GetAllUsers", CacheSettings.IgnoreParameters)]
-        [Cache.TriggerInvalidation("GetUserById", CacheSettings.UseId)]
-         public void DeleteUser(User user)
+        [Cache.TriggerInvalidation("GetUserById", CacheSettings.UseProperty, "Id")]
+        public void DeleteUserById(int id)
         {
-            Dal.DeleteUser(user);
-
-            var f = new {Id = 4, Name = "NAme"};
+            Dal.DeleteUserById(id);
         }
-
     }
 }

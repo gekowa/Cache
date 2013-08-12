@@ -21,7 +21,7 @@ namespace TestCache
         public void SetUp()
         {
             dal = MockRepository.GenerateStrictMock<IUserDal>();
-            cache = new InProcessMemoryCache();
+            cache = new DiskCache();
 
             CacheService.Cache = cache;
             target = new UserRepository();
@@ -33,6 +33,9 @@ namespace TestCache
         {
             //Arrange
             dal.Expect(d => d.GetAllUsers()).Return(GetUsers());
+            dal.Expect(d => d.DeleteUserById(1234)).IgnoreArguments();
+
+            target.DeleteUserById(1234);
 
             //Act
             target.GetAllUsers();
@@ -49,6 +52,9 @@ namespace TestCache
             //Arrange
             int id = 1;
             dal.Expect(d => d.GetUserById(id)).Return(GetUsers().First());
+            dal.Expect(d => d.DeleteUserById(id)).IgnoreArguments();
+
+            target.DeleteUserById(id);
 
             //Act
             target.GetUserById(id);
@@ -66,8 +72,12 @@ namespace TestCache
             int id2 = 2;
             dal.Expect(d => d.GetUserById(id1)).Return(GetUsers().First());
             dal.Expect(d => d.GetUserById(id2)).Return(GetUsers().Last());
+            dal.Expect(d => d.DeleteUserById(id1)).IgnoreArguments();
+            dal.Expect(d => d.DeleteUserById(id2)).IgnoreArguments();
 
             //Act
+            target.DeleteUserById(id1);
+            target.DeleteUserById(id2);
             target.GetUserById(id1);
             target.GetUserById(id2);
 
@@ -83,8 +93,10 @@ namespace TestCache
                 .Return(GetUsers())
                 .Repeat.Twice();                    //Second call expected after cache is invalidated
             dal.Expect(d => d.AddUser(null)).IgnoreArguments();
+            dal.Expect(d => d.DeleteUserById(5678)).IgnoreArguments();
             
             //Act
+            target.DeleteUserById(5678);
             target.GetAllUsers();
             target.AddUser(new User{ Id = 1234});   //Should trigger invalidation
             target.GetAllUsers();
