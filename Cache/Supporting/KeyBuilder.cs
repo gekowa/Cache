@@ -69,12 +69,9 @@ namespace CacheAspect
                     cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null").Append(SPLITTER);
                     break;
                 case CacheSettings.UseProperty:
-                    //argIndex = GetArgumentIndexByName(ParameterProperty);
-                    //cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null");
-                    for (var i = 0; i < ParameterProperties.Length; i++)
+                    foreach (var parameterProperty in ParameterProperties)
                     {
-                        argIndex = GetArgumentIndexByName(ParameterProperties[i]);
-                        // cacheKeyBuilder.Append( ?? "Null");
+                        argIndex = GetArgumentIndexByName(parameterProperty);
                         BuildDefaultKey(arguments.GetArgument(argIndex), cacheKeyBuilder);
                     }
                     break;
