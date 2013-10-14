@@ -84,6 +84,8 @@ namespace CacheAspect
                         BuildDefaultKey(arguments.GetArgument(i), cacheKeyBuilder);
                     }
                     break;
+                default:
+                    throw new ArgumentException(string.Format("Settings {0} is not supported", Settings));
             }
 
             return cacheKeyBuilder.ToString().TrimEnd(SPLITTER);
