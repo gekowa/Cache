@@ -11,6 +11,7 @@ namespace CacheAspect.Attributes
     public static partial class Cache
     {
         [Serializable]
+        // TODO: Change name to CacheableAspect?
         public class Cacheable : OnMethodBoundaryAspect
         {
             private KeyBuilder _keyBuilder;
@@ -21,13 +22,50 @@ namespace CacheAspect.Attributes
 
             #region Constructors
 
-            public Cacheable(String groupName, CacheSettings settings, String parameterProperty)
+            /// <summary>
+            /// Initializes a new instance of the Cacheable class
+            /// </summary>
+            public Cacheable()
+                : this(string.Empty)
             {
-                KeyBuilder.GroupName = groupName;
-                KeyBuilder.Settings = settings;
-                KeyBuilder.ParameterProperties = new string[] { parameterProperty };
             }
 
+            /// <summary>
+            /// Initializes a new instance of the Cacheable class
+            /// </summary>
+            /// <param name="groupName">Group name for the cached objects</param>
+            public Cacheable(String groupName)
+                : this(groupName, CacheSettings.Default)
+            {
+            }
+
+            /// <summary>
+            /// Initializes a new instance of the Cacheable class
+            /// </summary>
+            /// <param name="groupName">Group name for the cached objects</param>
+            /// <param name="settings">An instance of CacheSettings for the settings of Cacheable</param>
+            public Cacheable(String groupName, CacheSettings settings)
+                : this(groupName, settings, string.Empty)
+            {
+            }
+
+            /// <summary>
+            /// Initializes a new instance of the Cacheable class
+            /// </summary>
+            /// <param name="groupName">Group name for the cached objects</param>
+            /// <param name="settings">An instance of CacheSettings for the settings of Cacheable</param>
+            /// <param name="parameterProperty">The name of the property to be used to generated the key for the cached object, when CacheSettings.UseProperty is used</param>
+            public Cacheable(String groupName, CacheSettings settings, String parameterProperty)
+                : this(groupName, settings, new string[] { parameterProperty })
+            {
+            }
+
+            /// <summary>
+            /// Initializes a new instance of the Cacheable class
+            /// </summary>
+            /// <param name="groupName">Group name for the cached objects</param>
+            /// <param name="settings">An instance of CacheSettings for the settings of Cacheable</param>
+            /// <param name="parameterProperties">The names of the properties to be used to generated the key for the cached object, when CacheSettings.UseProperty is used</param>
             public Cacheable(string groupName, CacheSettings settings, string[] parameterProperties)
             {
                 KeyBuilder.GroupName = groupName;
@@ -35,19 +73,6 @@ namespace CacheAspect.Attributes
                 KeyBuilder.ParameterProperties = parameterProperties;
             }
 
-            public Cacheable(String groupName, CacheSettings settings)
-                : this(groupName, settings, string.Empty)
-            {
-            }
-
-            public Cacheable(String groupName) : this(groupName, CacheSettings.Default)
-            {
-            }
-
-            public Cacheable() : this(string.Empty)
-            {
-
-            }
             #endregion
 
             //Method executed at build time.
