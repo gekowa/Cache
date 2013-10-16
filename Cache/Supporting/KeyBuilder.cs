@@ -69,12 +69,9 @@ namespace CacheAspect
                     cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null").Append(SPLITTER);
                     break;
                 case CacheSettings.UseProperty:
-                    //argIndex = GetArgumentIndexByName(ParameterProperty);
-                    //cacheKeyBuilder.Append(arguments.GetArgument(argIndex) ?? "Null");
-                    for (var i = 0; i < ParameterProperties.Length; i++)
+                    foreach (var parameterProperty in ParameterProperties)
                     {
-                        argIndex = GetArgumentIndexByName(ParameterProperties[i]);
-                        // cacheKeyBuilder.Append( ?? "Null");
+                        argIndex = GetArgumentIndexByName(parameterProperty);
                         BuildDefaultKey(arguments.GetArgument(argIndex), cacheKeyBuilder);
                     }
                     break;
@@ -84,6 +81,8 @@ namespace CacheAspect
                         BuildDefaultKey(arguments.GetArgument(i), cacheKeyBuilder);
                     }
                     break;
+                default:
+                    throw new ArgumentException(string.Format("Settings {0} is not supported", Settings));
             }
 
             return cacheKeyBuilder.ToString().TrimEnd(SPLITTER);
