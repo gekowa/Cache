@@ -21,7 +21,7 @@ namespace TestCache
         public void SetUp()
         {
             dal = MockRepository.GenerateStrictMock<IUserDal>();
-            cache = new DiskCache();
+            cache = new InProcessMemoryCache();
 
             CacheService.Cache = cache;
             target = new UserRepository();
@@ -100,6 +100,25 @@ namespace TestCache
             target.GetAllUsers();
             target.AddUser(new User{ Id = 1234});   //Should trigger invalidation
             target.GetAllUsers();
+
+            //Assert
+            dal.VerifyAllExpectations();
+        }
+
+        [TestMethod]
+        public void GetUserById_EditUserAfterCaching_CacheShouldBeInvalidated() {
+            //Arrange
+            dal.Expect(d => d.GetUserById(1))
+                .Return(GetUsers().First())
+                .Repeat.Twice();                    //Second call expected after cache is invalidated
+            dal.Expect(d => d.EditUser(GetUsers().First())).IgnoreArguments();
+            dal.Expect(d => d.DeleteUserById(5678)).IgnoreArguments();
+
+            //Act
+            target.DeleteUserById(5678);
+            target.GetUserById(1);
+            target.EditUser(new User { Id = 1 });   //Should trigger invalidation
+            target.GetUserById(1);
 
             //Assert
             dal.VerifyAllExpectations();

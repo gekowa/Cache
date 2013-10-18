@@ -4,7 +4,6 @@ using System.Reflection;
 using CacheAspect;
 using CacheAspect.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using PostSharp.Aspects;
 
 namespace TestCache {
@@ -21,8 +20,6 @@ namespace TestCache {
         const int int32ParaArgValue = 2048576;
         const string stringParaArgValue = "Sample String";
         static readonly DateTime dtParaValue = DateTime.Now;
-
-
 
         static readonly object instance = new object();
 

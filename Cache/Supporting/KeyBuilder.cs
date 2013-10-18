@@ -106,13 +106,6 @@ namespace CacheAspect {
             }
         }
 
-        //private int GetArgumentIndexByName(string paramName) {
-        //    var paramKeyValue = parametersNameValueMapper.SingleOrDefault(arg => string.Compare(arg.Value, paramName, CultureInfo.InvariantCulture,
-        //        CompareOptions.IgnoreCase) == 0);
-
-        //    return paramKeyValue.Key;
-        //}
-
         private int GetArgumentIndexByName(string parameterName) {
             for (int i = 0; i < MethodParameters.Length; i++) {
                 if (parameterName == MethodParameters[i].Name) {
@@ -124,7 +117,8 @@ namespace CacheAspect {
         }
 
         object ExtractPropertyValueByAccessor(object argument, string accessor) {
-            // TODO: allow accessor to be "Property1.Property2", can up to 3 level
+            // TODO: allow accessor to be "Property1.Property2, Property3.Property4", 
+            // maybe can up to 3 level
             return argument.GetType().GetProperty(accessor).GetValue(argument, null);
         }
     }
