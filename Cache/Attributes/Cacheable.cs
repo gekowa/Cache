@@ -72,16 +72,16 @@ namespace CacheAspect.Attributes {
 
             // Fetch the value from the cache.
             ICache cache = CacheService.Cache;
-            MethodExecWrapper value = (MethodExecWrapper)(cache.Contains(cacheKey) ? cache[cacheKey] : null);
+            MethodExecWrapper cachedWrapper = (MethodExecWrapper)(cache.Contains(cacheKey) ? cache[cacheKey] : null);
 
-            if (value != null && !IsTooOld(value.Timestamp)) {
+            if (cachedWrapper != null && !IsTooOld(cachedWrapper.Timestamp)) {
                 // The value was found in cache. Don't execute the method. Return immediately.
-                args.ReturnValue = value.ReturnValue;
-                // args.Arguments = value.Arguments;
-                for (int i = 0; i < value.Arguments.Length; i++) {
+                args.ReturnValue = cachedWrapper.ReturnValue;
+                
+                for (int i = 0; i < cachedWrapper.Arguments.Length; i++) {
                     // args.Arguments.SetArgument(i, value.Arguments[i]);
                     object fromArgs = args.Arguments[i];
-                    object cached = value.Arguments[i];
+                    object cached = cachedWrapper.Arguments[i];
 
                     if (cached == null) {
                         continue;
@@ -92,17 +92,30 @@ namespace CacheAspect.Attributes {
                         continue;
                     }
 
-                    Type commonType = fromArgs.GetType();
-                    foreach (PropertyInfo pi in commonType.GetProperties()) {
-                        if (pi.CanRead && pi.CanWrite) {
-                            object fromValue = pi.GetValue(fromArgs, null);
-                            object cachedValue = pi.GetValue(cached, null);
-                            if (fromValue != cachedValue) {
-                                pi.SetValue(fromArgs, cachedValue, null);
+                    if (fromArgs != null) {
+                        Type commonType = fromArgs.GetType();
+                        foreach (PropertyInfo pi in commonType.GetProperties()) {
+                            if (pi.CanRead && pi.CanWrite) {
+                                object fromValue = pi.GetValue(fromArgs, null);
+                                object cachedValue = pi.GetValue(cached, null);
+                                if (fromValue != cachedValue) {
+                                    pi.SetValue(fromArgs, cachedValue, null);
+                                }
                             }
                         }
                     }
                 }
+
+                // parameters out?
+                ParameterInfo[] methodParameters = args.Method.GetParameters();
+                for (int i = 0; i < methodParameters.Length; i++) {
+                    ParameterInfo pi = methodParameters[i];
+                    if (pi.IsOut) {
+                        // copy argument
+                        args.Arguments.SetArgument(i, cachedWrapper.Arguments[i]);
+                    }
+                }
+
                 args.FlowBehavior = FlowBehavior.Return;
             } else {
                 // The value was NOT found in cache. Continue with method execution, but store

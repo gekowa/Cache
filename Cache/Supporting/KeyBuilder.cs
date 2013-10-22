@@ -76,8 +76,6 @@ namespace CacheAspect {
                     continue;
                 }
 
-
-
                 switch (Settings) {
                     case CacheSettings.UseSelectedParameters: {
                         var parameterName = parameter.Name;
