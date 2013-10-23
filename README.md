@@ -6,6 +6,8 @@ This project is based on https://cache.codeplex.com/, SVN revision 20740. The pu
 1. Removed OutputProcess and BTree implementations
 2. Added a raw version of disk cache
 3. Changed KeyBuilder to be more flexible
+4. Support "out" modifier of method parameter
+5. Rewritten KeyBuilder
 
 Requirements:
 
